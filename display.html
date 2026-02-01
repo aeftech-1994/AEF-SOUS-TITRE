@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Affichage - Régie AEF v4.4</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&family=Open+Sans:wght@400;700;800&family=Roboto:wght@400;700;900&family=Lato:wght@400;700;900&family=Poppins:wght@400;700;800&family=Raleway:wght@400;700;800&family=Oswald:wght@400;700&family=Playfair+Display:wght@400;700;900&family=Merriweather:wght@400;700;900&family=Lora:wght@400;700&family=Ubuntu:wght@400;700&family=Nunito:wght@400;700;800&family=PT+Sans:wght@400;700&family=Inter:wght@400;700;800&family=Quicksand:wght@400;700&display=swap');
+
+        :root {
+            --couleur-principale: #802B36;
+            --position-texte: flex-end;
+            --taille-texte-normal: 35px;
+            --taille-verset: 1.35rem;
+            --police-principale: 'Montserrat', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: transparent;
+            font-family: var(--police-principale);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: var(--position-texte);
+            align-items: center;
+            padding-bottom: 50px;
+        }
+
+        body.position-haut {
+            justify-content: flex-start;
+            padding-top: 50px;
+            padding-bottom: 0;
+        }
+
+        body.position-centre {
+            justify-content: center;
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+
+        body.position-bas {
+            justify-content: flex-end;
+            padding-top: 0;
+            padding-bottom: 50px;
+        }
+
+        #simple-text {
+            color: white;
+            font-size: var(--taille-texte-normal);
+            font-weight: bold;
+            text-align: center;
+            max-width: 90%;
+            line-height: 1.2;
+            font-family: var(--police-principale);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            padding: 15px 30px;
+            transition: opacity 0.8s ease;
+            opacity: 0;
+            display: none;
+        }
+
+        #simple-text.active {
+            opacity: 1;
+            display: block;
+        }
+
+        body.hidden-display #simple-text.active {
+            opacity: 0;
+        }
+
+        .lt-wrapper {
+            width: 1400px;
+            max-width: 90%;
+            min-height: 120px;
+            margin-bottom: 0;
+            position: relative;
+            opacity: 0;
+            transform: translateY(100px);
+            transition: all 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+            display: none;
+        }
+
+        .lt-wrapper.visible {
+            opacity: 1;
+            transform: translateY(0);
+            display: block;
+        }
+
+        body.hidden-display .lt-wrapper.visible {
+            opacity: 0;
+            transition: opacity 0.8s ease;
+        }
+
+        .church-badge {
+            background: white;
+            color: #333;
+            display: inline-block;
+            padding: 8px 20px;
+            font-size: 1rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            position: absolute;
+            top: -20px;
+            left: 60px;
+            z-index: 10;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            font-family: var(--police-principale);
+            transition: opacity 0.3s ease;
+        }
+
+        .main-card {
+            background-color: var(--couleur-principale);
+            padding: 35px 60px 35px 100px;
+            position: relative;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            color: white;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+        }
+
+        .main-card::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 60px;
+            background: rgba(0,0,0,0.2);
+        }
+
+        .fold-effect {
+            position: absolute;
+            left: -20px;
+            top: 15px;
+            width: 60px;
+            height: 100%;
+            background: var(--couleur-principale);
+            filter: brightness(0.7);
+            transform: skewY(-15deg);
+            z-index: -1;
+        }
+
+        .content-anim {
+            transition: opacity 0.6s ease, transform 0.6s ease;
+            width: 100%;
+        }
+
+        .content-anim.fade-out {
+            opacity: 0;
+            transform: translateX(20px);
+        }
+
+        .verse-text {
+            font-size: var(--taille-verset);
+            font-weight: 700;
+            line-height: 1.4;
+            text-transform: uppercase;
+            font-family: var(--police-principale);
+        }
+
+        .verse-text sup {
+            font-size: 0.7em;
+            font-weight: 800;
+            opacity: 0.8;
+            margin-right: 3px;
+        }
+
+        .status-indicator {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 0, 0, 0.8);
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+            z-index: 1500;
+            transition: all 0.3s ease;
+            display: none; /* MASQUÉ COMPLÈTEMENT */
+        }
+
+        .status-indicator.connected {
+            background: rgba(0, 255, 0, 0.8);
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+        }
+
+        .status-indicator.connecting {
+            background: rgba(255, 165, 0, 0.8);
+            box-shadow: 0 0 10px rgba(255, 165, 0, 0.5);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .status-indicator.auto-hide {
+            opacity: 0;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="position-bas">
+    <div class="status-indicator connecting" id="statusIndicator"></div>
+
+    <div id="simple-text"></div>
+
+    <div class="lt-wrapper" id="ltContainer">
+        <div class="church-badge" id="refBadge">Jean 3:16</div>
+        <div class="main-card">
+            <div class="fold-effect"></div>
+            <div class="content-anim" id="textContent">
+                <div class="verse-text" id="verseBody">En attente de connexion...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== CONFIGURATION ====================
+        const CONFIG_API_URL = window.location.protocol + '//' + window.location.host + '/api/config';
+        
+        // ==================== TABLEAU DES LIVRES DE LA BIBLE ====================
+        const LIVRES_BIBLE = [
+            { fr: "Genèse", en: "Genesis", abrev: ["Gen", "Gn", "Ge"] },
+            { fr: "Exode", en: "Exodus", abrev: ["Exo", "Ex", "Exod"] },
+            { fr: "Lévitique", en: "Leviticus", abrev: ["Lév", "Lv", "Lev", "Levitique"] },
+            { fr: "Nombres", en: "Numbers", abrev: ["Nom", "Nb", "Num"] },
+            { fr: "Deutéronome", en: "Deuteronomy", abrev: ["Deut", "Dt", "Deu", "Deuteronome"] },
+            { fr: "Josué", en: "Joshua", abrev: ["Jos", "Josh"] },
+            { fr: "Juges", en: "Judges", abrev: ["Jug", "Jg", "Judg"] },
+            { fr: "Ruth", en: "Ruth", abrev: ["Rt", "Ru"] },
+            { fr: "1 Samuel", en: "1 Samuel", abrev: ["1 Sam", "1 S", "1Sam", "1S"] },
+            { fr: "2 Samuel", en: "2 Samuel", abrev: ["2 Sam", "2 S", "2Sam", "2S"] },
+            { fr: "1 Rois", en: "1 Kings", abrev: ["1 Ro", "1 R", "1Ro", "1R", "1 Ki"] },
+            { fr: "2 Rois", en: "2 Kings", abrev: ["2 Ro", "2 R", "2Ro", "2R", "2 Ki"] },
+            { fr: "1 Chroniques", en: "1 Chronicles", abrev: ["1 Chr", "1 Ch", "1Chr", "1Ch"] },
+            { fr: "2 Chroniques", en: "2 Chronicles", abrev: ["2 Chr", "2 Ch", "2Chr", "2Ch"] },
+            { fr: "Esdras", en: "Ezra", abrev: ["Esd", "Ezr"] },
+            { fr: "Néhémie", en: "Nehemiah", abrev: ["Néh", "Neh", "Ne", "Nehemie"] },
+            { fr: "Esther", en: "Esther", abrev: ["Est", "Esth", "Es"] },
+            { fr: "Job", en: "Job", abrev: ["Jb"] },
+            { fr: "Psaumes", en: "Psalms", abrev: ["Ps", "Psa", "Psaume"] },
+            { fr: "Proverbes", en: "Proverbs", abrev: ["Prov", "Pr", "Pro"] },
+            { fr: "Ecclésiaste", en: "Ecclesiastes", abrev: ["Ecc", "Ec", "Eccl"] },
+            { fr: "Cantique des Cantiques", en: "Song of Solomon", abrev: ["Cant", "Ct", "Song", "SOS"] },
+            { fr: "Ésaïe", en: "Isaiah", abrev: ["Ésa", "És", "Isa", "Is", "Esaïe", "Esaie"] },
+            { fr: "Jérémie", en: "Jeremiah", abrev: ["Jér", "Jr", "Jer", "Jeremie"] },
+            { fr: "Lamentations", en: "Lamentations", abrev: ["Lam", "La"] },
+            { fr: "Ézéchiel", en: "Ezekiel", abrev: ["Ézé", "Éz", "Eze", "Ezek", "Ezechiel"] },
+            { fr: "Daniel", en: "Daniel", abrev: ["Dan", "Da", "Dn"] },
+            { fr: "Osée", en: "Hosea", abrev: ["Os", "Hos"] },
+            { fr: "Joël", en: "Joel", abrev: ["Joe", "Jl"] },
+            { fr: "Amos", en: "Amos", abrev: ["Am"] },
+            { fr: "Abdias", en: "Obadiah", abrev: ["Abd", "Ob", "Oba"] },
+            { fr: "Jonas", en: "Jonah", abrev: ["Jon", "Jnh"] },
+            { fr: "Michée", en: "Micah", abrev: ["Mic", "Mi"] },
+            { fr: "Nahum", en: "Nahum", abrev: ["Nah", "Na"] },
+            { fr: "Habakuk", en: "Habakkuk", abrev: ["Hab", "Ha"] },
+            { fr: "Sophonie", en: "Zephaniah", abrev: ["Soph", "So", "Zep"] },
+            { fr: "Aggée", en: "Haggai", abrev: ["Agg", "Ag", "Hag"] },
+            { fr: "Zacharie", en: "Zechariah", abrev: ["Zach", "Za", "Zec"] },
+            { fr: "Malachie", en: "Malachi", abrev: ["Mal", "Ml"] },
+            { fr: "Matthieu", en: "Matthew", abrev: ["Matt", "Mt", "Mat"] },
+            { fr: "Marc", en: "Mark", abrev: ["Mc", "Mr", "Mar"] },
+            { fr: "Luc", en: "Luke", abrev: ["Lc", "Lk", "Lu"] },
+            { fr: "Jean", en: "John", abrev: ["Jn", "Joh"] },
+            { fr: "Actes", en: "Acts", abrev: ["Act", "Ac"] },
+            { fr: "Romains", en: "Romans", abrev: ["Rom", "Ro", "Rm"] },
+            { fr: "1 Corinthiens", en: "1 Corinthians", abrev: ["1 Cor", "1 Co", "1Cor", "1Co"] },
+            { fr: "2 Corinthiens", en: "2 Corinthians", abrev: ["2 Cor", "2 Co", "2Cor", "2Co"] },
+            { fr: "Galates", en: "Galatians", abrev: ["Gal", "Ga"] },
+            { fr: "Éphésiens", en: "Ephesians", abrev: ["Éph", "Ép", "Eph", "Ep", "Ephésiens", "Ephesiens"] },
+            { fr: "Philippiens", en: "Philippians", abrev: ["Phil", "Ph", "Php"] },
+            { fr: "Colossiens", en: "Colossians", abrev: ["Col"] },
+            { fr: "1 Thessaloniciens", en: "1 Thessalonians", abrev: ["1 Thess", "1 Th", "1Thess", "1Th"] },
+            { fr: "2 Thessaloniciens", en: "2 Thessalonians", abrev: ["2 Thess", "2 Th", "2Thess", "2Th"] },
+            { fr: "1 Timothée", en: "1 Timothy", abrev: ["1 Tim", "1 Ti", "1Tim", "1Ti"] },
+            { fr: "2 Timothée", en: "2 Timothy", abrev: ["2 Tim", "2 Ti", "2Tim", "2Ti"] },
+            { fr: "Tite", en: "Titus", abrev: ["Tit", "Tt"] },
+            { fr: "Philémon", en: "Philemon", abrev: ["Philém", "Phm", "Phlm"] },
+            { fr: "Hébreux", en: "Hebrews", abrev: ["Héb", "Hé", "Heb", "He", "Hebreux"] },
+            { fr: "Jacques", en: "James", abrev: ["Jacq", "Jac", "Jas", "Jm"] },
+            { fr: "1 Pierre", en: "1 Peter", abrev: ["1 Pi", "1 P", "1Pi", "1P", "1 Pe"] },
+            { fr: "2 Pierre", en: "2 Peter", abrev: ["2 Pi", "2 P", "2Pi", "2P", "2 Pe"] },
+            { fr: "1 Jean", en: "1 John", abrev: ["1 Jn", "1 J", "1Jn", "1J"] },
+            { fr: "2 Jean", en: "2 John", abrev: ["2 Jn", "2 J", "2Jn", "2J"] },
+            { fr: "3 Jean", en: "3 John", abrev: ["3 Jn", "3 J", "3Jn", "3J"] },
+            { fr: "Jude", en: "Jude", abrev: ["Jud", "Jd"] },
+            { fr: "Apocalypse", en: "Revelation", abrev: ["Apoc", "Ap", "Rev"] }
+        ];
+
+        function estReference(ligne) {
+            if (!ligne || typeof ligne !== 'string') return false;
+            const regexReference = /^(.+?)\s+(\d+):(\d+)(-\d+)?$/;
+            const match = ligne.trim().match(regexReference);
+            if (!match) return false;
+            const livrePotentiel = match[1].trim();
+            return LIVRES_BIBLE.some(livre => {
+                if (livre.fr.toLowerCase() === livrePotentiel.toLowerCase()) return true;
+                if (livre.en.toLowerCase() === livrePotentiel.toLowerCase()) return true;
+                return livre.abrev.some(ab => ab.toLowerCase() === livrePotentiel.toLowerCase());
+            });
+        }
+
+        function detecterVerset(text) {
+            if (!text || typeof text !== 'string') return null;
+            const cleanText = text.trim();
+            const lignes = cleanText.split(/\r?\n/);
+            if (lignes.length === 0) return null;
+            
+            if (lignes.length >= 1 && estReference(lignes[0])) {
+                const reference = lignes[0].trim();
+                let texteVerset = lignes.slice(1).join('\n').trim();
+                texteVerset = formaterNumeroVerset(texteVerset);
+                return { reference: reference, texte: texteVerset };
+            }
+            
+            if (lignes.length >= 2 && estReference(lignes[lignes.length - 1])) {
+                const reference = lignes[lignes.length - 1].trim();
+                let texteVerset = lignes.slice(0, -1).join('\n').trim();
+                texteVerset = formaterNumeroVerset(texteVerset);
+                return { reference: reference, texte: texteVerset };
+            }
+            
+            return null;
+        }
+
+        function formaterNumeroVerset(texte) {
+            const regexNumero = /^(\d+)(.+)$/;
+            const match = texte.match(regexNumero);
+            if (match) {
+                return `<sup>${match[1]}</sup>${match[2]}`;
+            }
+            return texte;
+        }
+
+        // ==================== VARIABLES GLOBALES ====================
+        let API_BASE = "http://192.168.1.22:49196";
+        const simpleTextEl = document.getElementById("simple-text");
+        const ltContainer = document.getElementById("ltContainer");
+        const refBadge = document.getElementById("refBadge");
+        const verseBody = document.getElementById("verseBody");
+        const textContent = document.getElementById("textContent");
+        const statusIndicator = document.getElementById("statusIndicator");
+        
+        let lastText = "";
+        let pollInterval = null;
+        let currentMode = null;
+        let titreActive = false;
+        let titreTimer = 10; // Durée en secondes
+        let titreTimerActive = false; // Timer actif ou non
+        let titreTimeout = null; // Timer pour masquer le titre
+        let statusHideTimeout = null;
+        let isPresentationActive = true; // NOUVEAU : Indique si présentation active
+        const INACTIVITY_THRESHOLD = 20000;
+        let lastUpdateTime = Date.now();
+
+        // ==================== CHARGEMENT CONFIG ====================
+        async function loadConfig() {
+            try {
+                const response = await fetch(CONFIG_API_URL);
+                const config = await response.json();
+                applyConfig(config);
+            } catch (err) {
+                console.error('[CONFIG] Erreur chargement:', err);
+            }
+        }
+
+        function applyConfig(config) {
+            API_BASE = config.propresenter_api;
+            console.log('[CONFIG] API ProPresenter:', API_BASE);
+            
+            document.documentElement.style.setProperty('--couleur-principale', config.couleur);
+            document.documentElement.style.setProperty('--taille-texte-normal', config.taille + 'px');
+            
+            if (config.police) {
+                document.documentElement.style.setProperty('--police-principale', `'${config.police}', sans-serif`);
+                console.log('[CONFIG] Police:', config.police);
+            }
+            
+            document.body.className = 'position-' + config.position;
+            
+            if (config.is_hidden) {
+                document.body.classList.add('hidden-display');
+            } else {
+                document.body.classList.remove('hidden-display');
+            }
+            
+            // Timer pour le titre
+            titreTimer = config.titre_timer || 10;
+            titreTimerActive = config.titre_timer_active || false;
+            console.log('[CONFIG] Timer titre:', titreTimer, 'secondes', titreTimerActive ? '(actif)' : '(inactif)');
+            
+            // Gestion du titre avec timer
+            if (config.titre_active && !titreActive) {
+                titreActive = true;
+                afficherTitre(config.titre_message);
+            } else if (!config.titre_active && titreActive) {
+                titreActive = false;
+                clearTitreTimer();
+                currentMode = null;
+                ltContainer.classList.remove('visible');
+                simpleTextEl.classList.remove('active');
+            } else if (config.titre_active && titreActive) {
+                if (verseBody.innerHTML !== config.titre_message) {
+                    verseBody.innerHTML = config.titre_message || "MESSAGE";
+                }
+            }
+        }
+
+        function afficherTitre(titre) {
+            simpleTextEl.classList.remove("active");
+            refBadge.innerText = "MESSAGE";
+            verseBody.innerHTML = titre || "MESSAGE";
+            ltContainer.classList.remove("visible");
+            void ltContainer.offsetWidth;
+            ltContainer.classList.add("visible");
+            currentMode = 'message';
+            
+            // Démarrer le timer de masquage automatique
+            startTitreTimer();
+        }
+
+        function startTitreTimer() {
+            // Annuler le timer précédent si existant
+            clearTitreTimer();
+            
+            // Si timer désactivé, ne pas masquer automatiquement
+            if (!titreTimerActive) {
+                console.log('[TIMER] Timer désactivé - Titre permanent');
+                return;
+            }
+            
+            console.log('[TIMER] Démarrage timer:', titreTimer, 'secondes');
+            
+            titreTimeout = setTimeout(async () => {
+                console.log('[TIMER] Masquage automatique du titre');
+                titreActive = false;
+                currentMode = null;
+                ltContainer.classList.remove('visible');
+                simpleTextEl.classList.remove('active');
+                
+                // IMPORTANT : Désactiver le titre dans la config serveur
+                try {
+                    const response = await fetch(CONFIG_API_URL);
+                    const config = await response.json();
+                    config.titre_active = false;
+                    
+                    await fetch(CONFIG_API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(config)
+                    });
+                    
+                    console.log('[TIMER] Config mise à jour - titre_active = false');
+                } catch (err) {
+                    console.error('[TIMER] Erreur mise à jour config:', err);
+                }
+            }, titreTimer * 1000);
+        }
+
+        function clearTitreTimer() {
+            if (titreTimeout) {
+                clearTimeout(titreTimeout);
+                titreTimeout = null;
+                console.log('[TIMER] Timer annulé');
+            }
+        }
+
+        // ==================== AFFICHAGE ====================
+        function updateDisplay(text) {
+            if (titreActive) return;
+            
+            // NOUVEAU : Si aucune présentation active, masquer tout
+            if (!isPresentationActive) {
+                if (simpleTextEl.classList.contains('active') || ltContainer.classList.contains('visible')) {
+                    simpleTextEl.classList.remove("active");
+                    ltContainer.classList.remove("visible");
+                    currentMode = null;
+                    lastText = ""; // Réinitialiser lastText aussi
+                    console.log('[Display] Présentation inactive - Masquage forcé');
+                }
+                return;
+            }
+            
+            if (text === lastText) return;
+            
+            lastText = text;
+            const now = Date.now();
+            const timeSinceLastUpdate = now - lastUpdateTime;
+
+            // Si texte vide OU patterns de masquage spéciaux
+            const textTrimmed = text.trim();
+            if (textTrimmed === "" || textTrimmed === "---" || textTrimmed === "CLEAR" || textTrimmed === "MASQUER") {
+                simpleTextEl.classList.remove("active");
+                ltContainer.classList.remove("visible");
+                currentMode = null;
+                console.log('[Display] Masquage détecté:', textTrimmed || '(vide)');
+                return;
+            }
+
+            const verset = detecterVerset(text);
+            
+            if (verset) {
+                const wasVersetMode = (currentMode === 'verset');
+                const isInactive = timeSinceLastUpdate > INACTIVITY_THRESHOLD;
+                
+                if (wasVersetMode && !isInactive) {
+                    console.log('[Animation] FADE');
+                    textContent.classList.add('fade-out');
+                    refBadge.style.opacity = "0";
+                    
+                    setTimeout(() => {
+                        refBadge.innerText = verset.reference;
+                        verseBody.innerHTML = verset.texte;
+                        textContent.classList.remove('fade-out');
+                        refBadge.style.opacity = "1";
+                    }, 600);
+                } else {
+                    console.log('[Animation] SLIDE-UP');
+                    simpleTextEl.classList.remove("active");
+                    ltContainer.classList.remove("visible");
+                    
+                    refBadge.innerText = verset.reference;
+                    verseBody.innerHTML = verset.texte;
+                    
+                    void ltContainer.offsetWidth;
+                    ltContainer.classList.add("visible");
+                    currentMode = 'verset';
+                }
+            } else {
+                ltContainer.classList.remove("visible");
+                simpleTextEl.innerHTML = text.replace(/\n/g, "<br>");
+                simpleTextEl.classList.add("active");
+                currentMode = 'simple';
+            }
+            
+            lastUpdateTime = now;
+        }
+
+        function setStatus(status) {
+            statusIndicator.className = 'status-indicator ' + status;
+            if (status === 'connected') {
+                if (statusHideTimeout) clearTimeout(statusHideTimeout);
+                statusHideTimeout = setTimeout(() => {
+                    statusIndicator.classList.add('auto-hide');
+                }, 3000);
+            } else {
+                statusIndicator.classList.remove('auto-hide');
+            }
+        }
+
+        // ==================== POLLING PROPRESENTER ====================
+        let checkCount = 0;  // Compteur de vérifications
+        
+        async function checkPresentationActive() {
+            try {
+                checkCount++;
+                const response = await fetch(`${API_BASE}/v1/presentation/active`);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                // Vérifier si la réponse a du contenu
+                const text = await response.text();
+                if (!text || text.trim() === '') {
+                    console.warn('[Presentation] Réponse vide - Considérer comme active');
+                    isPresentationActive = true;
+                    return;
+                }
+                
+                // Parser le JSON
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (parseErr) {
+                    console.error('[Presentation] JSON invalide - Considérer comme active');
+                    isPresentationActive = true;
+                    return;
+                }
+                
+                // Si presentation est null, aucune présentation active
+                const wasActive = isPresentationActive;
+                isPresentationActive = (data.presentation !== null);
+                
+                // LOG : Les 20 premières fois OU lors d'un changement
+                if (checkCount <= 20 || wasActive !== isPresentationActive) {
+                    console.log(`[Presentation #${checkCount}] 📡 API: ${JSON.stringify(data.presentation)}`);
+                    console.log(`[Presentation #${checkCount}] 🔍 État: ${isPresentationActive ? '✅ ACTIVE' : '❌ INACTIVE'}`);
+                }
+                
+                // LOG IMPORTANT : Changement d'état
+                if (wasActive !== isPresentationActive) {
+                    console.warn(`═══════════════════════════════════════════`);
+                    console.warn(`⚠️  CHANGEMENT D'ÉTAT DÉTECTÉ (check #${checkCount})`);
+                    console.warn(`Avant: ${wasActive ? 'ACTIVE ✅' : 'INACTIVE ❌'}`);
+                    console.warn(`Maintenant: ${isPresentationActive ? 'ACTIVE ✅' : 'INACTIVE ❌'}`);
+                    console.warn(`═══════════════════════════════════════════`);
+                }
+            } catch (err) {
+                console.error(`[Presentation #${checkCount}] ❌ Erreur:`, err.message);
+                // En cas d'erreur, considérer comme active
+                isPresentationActive = true;
+            }
+        }
+        
+        async function pollUpdate() {
+            try {
+                // TOUJOURS vérifier si une présentation est active (toutes les 500ms)
+                await checkPresentationActive();
+                
+                // Si aucune présentation active, masquer tout et arrêter
+                if (!isPresentationActive) {
+                    updateDisplay(''); // Force le masquage
+                    setStatus('connected');
+                    return;
+                }
+                
+                // Récupérer le slide actuel
+                const response = await fetch(`${API_BASE}/v1/status/slide`);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                // Vérifier si la réponse a du contenu
+                const text = await response.text();
+                if (!text || text.trim() === '') {
+                    // Réponse vide, ignorer silencieusement
+                    return;
+                }
+                
+                // Parser le JSON
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (parseErr) {
+                    // JSON invalide, ignorer silencieusement
+                    return;
+                }
+                
+                const currentText = data.current?.text || "";
+                updateDisplay(currentText);
+                setStatus('connected');
+            } catch (err) {
+                console.error('[ProPresenter] Erreur:', err.message);
+                setStatus('connecting');
+            }
+        }
+
+        function startPolling() {
+            if (pollInterval) clearInterval(pollInterval);
+            pollUpdate();
+            pollInterval = setInterval(pollUpdate, 500);
+        }
+
+        // ==================== DÉMARRAGE ====================
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('[Display] v4.4 - Démarrage');
+            loadConfig();
+            startPolling();
+            setInterval(loadConfig, 2000);
+        });
+
+        // ==================== RACCOURCIS CLAVIER ====================
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                e.preventDefault();
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen();
+                } else {
+                    document.exitFullscreen();
+                }
+            }
+            
+            if (e.key === 'Escape' && document.fullscreenElement) {
+                document.exitFullscreen();
+            }
+        });
+    </script>
+</body>
+</html>

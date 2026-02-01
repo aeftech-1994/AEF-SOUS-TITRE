@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuration AEF - Régie</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        
+        h1 {
+            font-size: 28px;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        
+        .subtitle {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .section {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 8px;
+        }
+        
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #4a90e2;
+        }
+        
+        input:disabled {
+            background: #f5f5f5;
+            color: #888;
+            cursor: not-allowed;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .input-suffix {
+            display: flex;
+            align-items: center;
+        }
+        
+        .input-suffix input {
+            flex: 1;
+        }
+        
+        .input-suffix span {
+            padding: 10px 15px;
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-left: none;
+            border-radius: 0 4px 4px 0;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .input-with-button {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .input-with-button .input-suffix {
+            flex: 1;
+        }
+        
+        .input-with-button input[type="text"] {
+            flex: 1;
+        }
+        
+        .edit-button {
+            padding: 10px 20px;
+            background: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+            white-space: nowrap;
+        }
+        
+        .edit-button:hover {
+            background: #357abd;
+        }
+        
+        .edit-button.save-mode {
+            background: #28a745;
+        }
+        
+        .edit-button.save-mode:hover {
+            background: #218838;
+        }
+        
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+        }
+        
+        .color-option {
+            width: 100%;
+            aspect-ratio: 1;
+            border-radius: 4px;
+            cursor: pointer;
+            border: 3px solid transparent;
+        }
+        
+        .color-option:hover {
+            opacity: 0.8;
+        }
+        
+        .color-option.selected {
+            border-color: #333;
+            box-shadow: 0 0 0 2px rgba(0,0,0,0.2);
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-option {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .btn-option:hover {
+            background: #f5f5f5;
+        }
+        
+        .btn-option.selected {
+            background: #4a90e2;
+            color: white;
+            border-color: #4a90e2;
+        }
+        
+        .checkbox-field {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .checkbox-field:hover {
+            background: #f0f0f0;
+        }
+        
+        .checkbox-custom {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #4a90e2;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            flex-shrink: 0;
+        }
+        
+        .checkbox-custom.checked {
+            background: #4a90e2;
+        }
+        
+        .checkbox-custom.checked::after {
+            content: "✓";
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .save-button {
+            width: 100%;
+            padding: 12px;
+            background: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .save-button:hover {
+            background: #357abd;
+        }
+        
+        .copy-button {
+            padding: 8px 16px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+            white-space: nowrap;
+        }
+        
+        .copy-button:hover {
+            background: #218838;
+        }
+        
+        .status-message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+            display: none;
+            font-size: 14px;
+        }
+        
+        .status-message.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-message.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .info {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 4px;
+            padding: 12px;
+            margin-top: 20px;
+            font-size: 13px;
+            color: #333;
+        }
+        
+        .info code {
+            background: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .info strong {
+            color: #0066cc;
+        }
+        
+        .url-display {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 8px;
+        }
+        
+        .url-display code {
+            flex: 1;
+            padding: 8px 12px;
+            background: #f5f5f5;
+            border-radius: 4px;
+            font-size: 13px;
+            word-break: break-all;
+        }
+        
+        .qrcode-container {
+            text-align: center;
+            margin-top: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 4px;
+        }
+        
+        #qrcode {
+            display: inline-block;
+            padding: 10px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .qrcode-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 10px;
+        }
+        
+        .timer-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 10px;
+        }
+        
+        .timer-group input {
+            width: 80px;
+        }
+        
+        .timer-group span {
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Configuration AEF</h1>
+        <div class="subtitle">Régie virtuelle sous-titres</div>
+        
+        <!-- API ProPresenter VERROUILLÉE -->
+        <div class="section">
+            <label>🎮 API ProPresenter</label>
+            <div class="input-with-button">
+                <input type="text" id="propresenter_ip" placeholder="10.0.0.9" style="flex: 2;" disabled>
+                <input type="text" id="propresenter_port" placeholder="49196" style="flex: 1;" disabled>
+                <button class="edit-button" id="editButtonAPI" onclick="toggleEditModeAPI()">✏️ Modifier</button>
+            </div>
+        </div>
+        
+        <!-- Message de prédication avec TIMER OPTIONNEL -->
+        <div class="section">
+            <label>📖 Titre du message de prédication</label>
+            <input type="text" id="titre_message" placeholder="Ex: Le pardon de Dieu">
+            
+            <div class="checkbox-field" onclick="toggleTitre()" style="margin-top: 10px;">
+                <div class="checkbox-custom" id="checkboxTitre"></div>
+                <span>Afficher le titre du message</span>
+            </div>
+            
+            <div class="checkbox-field" onclick="toggleTimerActive()" style="margin-top: 10px;">
+                <div class="checkbox-custom" id="checkboxTimer"></div>
+                <span>Masquer automatiquement après</span>
+            </div>
+            
+            <div class="timer-group" id="timerGroup" style="display: none;">
+                <input type="number" id="titre_timer" min="1" max="300" value="10" onchange="updateTimer()">
+                <span>secondes</span>
+            </div>
+            
+            <button class="save-button" onclick="masquerTitreManuel()" style="margin-top: 10px; background: #dc3545;">
+                👁️ Masquer le titre maintenant
+            </button>
+        </div>
+        
+        <!-- Couleur -->
+        <div class="section">
+            <label>🎨 Couleur du lower third</label>
+            <div class="color-grid">
+                <div class="color-option selected" style="background-color: #802B36;" data-color="#802B36" onclick="selectColor('#802B36')"></div>
+                <div class="color-option" style="background-color: #7A3F3A;" data-color="#7A3F3A" onclick="selectColor('#7A3F3A')"></div>
+                <div class="color-option" style="background-color: #A5763A;" data-color="#A5763A" onclick="selectColor('#A5763A')"></div>
+                <div class="color-option" style="background-color: #5C7A3A;" data-color="#5C7A3A" onclick="selectColor('#5C7A3A')"></div>
+                <div class="color-option" style="background-color: #3A63A5;" data-color="#3A63A5" onclick="selectColor('#3A63A5')"></div>
+            </div>
+        </div>
+        
+        <!-- Position -->
+        <div class="section">
+            <label>📍 Position du texte à l'écran</label>
+            <div class="button-group">
+                <div class="btn-option" data-position="haut" onclick="selectPosition('haut')">Haut</div>
+                <div class="btn-option" data-position="centre" onclick="selectPosition('centre')">Centre</div>
+                <div class="btn-option selected" data-position="bas" onclick="selectPosition('bas')">Bas</div>
+            </div>
+        </div>
+        
+        <!-- Police -->
+        <div class="section">
+            <label>✍️ Police de caractères</label>
+            <select id="police_select" onchange="selectPolice()">
+                <option value="Montserrat">Montserrat (par défaut)</option>
+                <option value="Open Sans">Open Sans</option>
+                <option value="Roboto">Roboto</option>
+                <option value="Lato">Lato</option>
+                <option value="Poppins">Poppins</option>
+                <option value="Raleway">Raleway</option>
+                <option value="Ubuntu">Ubuntu</option>
+                <option value="Playfair Display">Playfair Display (élégante)</option>
+                <option value="Merriweather">Merriweather (lecture)</option>
+                <option value="Nunito">Nunito (arrondie)</option>
+            </select>
+        </div>
+        
+        <!-- Taille avec bouton Modifier/Enregistrer -->
+        <div class="section">
+            <label>📏 Taille du texte (en pixels)</label>
+            <div class="input-with-button">
+                <div class="input-suffix">
+                    <input type="number" id="taille_text" min="10" max="200" value="35" disabled>
+                    <span>px</span>
+                </div>
+                <button class="edit-button" id="editButton" onclick="toggleEditMode()">✏️ Modifier</button>
+            </div>
+        </div>
+        
+        <!-- Masquer affichage avec action immédiate -->
+        <div class="section">
+            <label>👁️ Visibilité de l'affichage</label>
+            <div class="checkbox-field" onclick="toggleHiddenImmediate()">
+                <div class="checkbox-custom" id="checkboxHidden"></div>
+                <span>Masquer l'affichage (mode caché)</span>
+            </div>
+        </div>
+        
+        <!-- Bouton sauvegarder -->
+        <button class="save-button" onclick="saveConfig()">💾 Sauvegarder la configuration</button>
+        <div class="status-message" id="statusMessage"></div>
+        
+        <!-- QR Code pour CONFIG.HTML (contrôle smartphone) -->
+        <div class="info">
+            <strong>📱 Contrôler depuis smartphone :</strong>
+            <div class="qrcode-container">
+                <div id="qrcode"></div>
+                <div class="qrcode-label">Scanner pour ouvrir cette page de configuration sur votre smartphone</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR Code Library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+
+    <script>
+        const API_URL = window.location.protocol + '//' + window.location.host + '/api/config';
+        
+        let config = {
+            couleur: '#802B36',
+            position: 'bas',
+            taille: '35',
+            police: 'Montserrat',
+            titre_message: '',
+            titre_active: false,
+            titre_timer: 10,
+            titre_timer_active: false,
+            is_hidden: false,
+            propresenter_api: 'http://127.0.0.1:49196'
+        };
+        
+        let isEditMode = false;
+        let isEditModeAPI = false;
+        let qrcode = null;
+        
+        // ==================== CHARGEMENT CONFIG ====================
+        async function loadConfig() {
+            try {
+                const response = await fetch(API_URL);
+                const data = await response.json();
+                config = data;
+                applyConfig();
+                console.log('[CONFIG] Chargée:', config);
+            } catch (err) {
+                console.error('[ERREUR] Chargement config:', err);
+                showStatus('Erreur de connexion au serveur', 'error');
+            }
+        }
+        
+        function applyConfig() {
+            // Parser l'URL API ProPresenter
+            try {
+                const url = new URL(config.propresenter_api);
+                document.getElementById('propresenter_ip').value = url.hostname;
+                document.getElementById('propresenter_port').value = url.port || '49196';
+            } catch (e) {
+                document.getElementById('propresenter_ip').value = '127.0.0.1';
+                document.getElementById('propresenter_port').value = '49196';
+            }
+            
+            document.getElementById('titre_message').value = config.titre_message;
+            document.getElementById('taille_text').value = config.taille;
+            document.getElementById('police_select').value = config.police || 'Montserrat';
+            document.getElementById('titre_timer').value = config.titre_timer || 10;
+            
+            // Couleur
+            document.querySelectorAll('.color-option').forEach(el => {
+                el.classList.remove('selected');
+                if (el.dataset.color === config.couleur) {
+                    el.classList.add('selected');
+                }
+            });
+            
+            // Position
+            document.querySelectorAll('[data-position]').forEach(el => {
+                el.classList.remove('selected');
+                if (el.dataset.position === config.position) {
+                    el.classList.add('selected');
+                }
+            });
+            
+            // Checkboxes
+            if (config.titre_active) {
+                document.getElementById('checkboxTitre').classList.add('checked');
+            } else {
+                document.getElementById('checkboxTitre').classList.remove('checked');
+            }
+            
+            if (config.titre_timer_active) {
+                document.getElementById('checkboxTimer').classList.add('checked');
+                document.getElementById('timerGroup').style.display = 'flex';
+            } else {
+                document.getElementById('checkboxTimer').classList.remove('checked');
+                document.getElementById('timerGroup').style.display = 'none';
+            }
+            
+            if (config.is_hidden) {
+                document.getElementById('checkboxHidden').classList.add('checked');
+            } else {
+                document.getElementById('checkboxHidden').classList.remove('checked');
+            }
+            
+            // QR Code pour CONFIG (cette page)
+            generateQRCode();
+        }
+        
+        function generateQRCode() {
+            const configUrl = window.location.href;
+            const qrcodeDiv = document.getElementById('qrcode');
+            qrcodeDiv.innerHTML = '';
+            
+            qrcode = new QRCode(qrcodeDiv, {
+                text: configUrl,
+                width: 150,
+                height: 150,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
+        
+        // ==================== MODE ÉDITION API ====================
+        function toggleEditModeAPI() {
+            const ipInput = document.getElementById('propresenter_ip');
+            const portInput = document.getElementById('propresenter_port');
+            const button = document.getElementById('editButtonAPI');
+            
+            if (!isEditModeAPI) {
+                // Activer mode édition
+                ipInput.disabled = false;
+                portInput.disabled = false;
+                ipInput.focus();
+                button.textContent = '💾 Enregistrer';
+                button.classList.add('save-mode');
+                isEditModeAPI = true;
+            } else {
+                // Enregistrer et verrouiller
+                ipInput.disabled = true;
+                portInput.disabled = true;
+                button.textContent = '✏️ Modifier';
+                button.classList.remove('save-mode');
+                isEditModeAPI = false;
+                
+                // Sauvegarder automatiquement
+                const ip = ipInput.value.trim();
+                const port = portInput.value.trim();
+                config.propresenter_api = `http://${ip}:${port}`;
+                sendConfigImmediate();
+                showStatus('✅ API ProPresenter enregistrée : ' + config.propresenter_api, 'success');
+            }
+        }
+        
+        // ==================== MODE ÉDITION TAILLE ====================
+        function toggleEditMode() {
+            const input = document.getElementById('taille_text');
+            const button = document.getElementById('editButton');
+            
+            if (!isEditMode) {
+                // Activer mode édition
+                input.disabled = false;
+                input.focus();
+                input.select();
+                button.textContent = '💾 Enregistrer';
+                button.classList.add('save-mode');
+                isEditMode = true;
+            } else {
+                // Enregistrer et verrouiller
+                input.disabled = true;
+                button.textContent = '✏️ Modifier';
+                button.classList.remove('save-mode');
+                isEditMode = false;
+                
+                // Sauvegarder automatiquement
+                config.taille = input.value;
+                sendConfigImmediate();
+                showStatus('✅ Taille enregistrée : ' + input.value + 'px', 'success');
+            }
+        }
+        
+        // ==================== TIMER TITRE ====================
+        function updateTimer() {
+            config.titre_timer = parseInt(document.getElementById('titre_timer').value) || 10;
+            sendConfigImmediate();
+        }
+        
+        // ==================== SAUVEGARDE CONFIG ====================
+        async function saveConfig() {
+            const ip = document.getElementById('propresenter_ip').value.trim();
+            const port = document.getElementById('propresenter_port').value.trim();
+            config.propresenter_api = `http://${ip}:${port}`;
+            config.titre_message = document.getElementById('titre_message').value.trim();
+            config.taille = document.getElementById('taille_text').value;
+            config.police = document.getElementById('police_select').value;
+            config.titre_timer = parseInt(document.getElementById('titre_timer').value) || 10;
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showStatus('✅ Configuration sauvegardée avec succès', 'success');
+                    console.log('[SAVE] Config sauvegardée:', result.config);
+                } else {
+                    showStatus('❌ Erreur lors de la sauvegarde', 'error');
+                }
+            } catch (err) {
+                console.error('[ERREUR] Sauvegarde:', err);
+                showStatus('❌ Erreur de connexion au serveur', 'error');
+            }
+        }
+        
+        async function sendConfigImmediate() {
+            try {
+                await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+            } catch (err) {
+                console.error('[ERREUR] Envoi immédiat:', err);
+            }
+        }
+        
+        // ==================== SÉLECTIONS ====================
+        function selectColor(color) {
+            document.querySelectorAll('.color-option').forEach(el => el.classList.remove('selected'));
+            event.target.classList.add('selected');
+            config.couleur = color;
+            sendConfigImmediate();
+        }
+        
+        function selectPosition(position) {
+            document.querySelectorAll('[data-position]').forEach(el => el.classList.remove('selected'));
+            event.target.classList.add('selected');
+            config.position = position;
+            sendConfigImmediate();
+        }
+        
+        function selectPolice() {
+            config.police = document.getElementById('police_select').value;
+            sendConfigImmediate();
+        }
+        
+        function toggleTitre() {
+            config.titre_active = !config.titre_active;
+            const checkbox = document.getElementById('checkboxTitre');
+            if (config.titre_active) {
+                checkbox.classList.add('checked');
+            } else {
+                checkbox.classList.remove('checked');
+            }
+            config.titre_message = document.getElementById('titre_message').value.trim();
+            sendConfigImmediate();
+        }
+        
+        function toggleTimerActive() {
+            config.titre_timer_active = !config.titre_timer_active;
+            const checkbox = document.getElementById('checkboxTimer');
+            const timerGroup = document.getElementById('timerGroup');
+            
+            if (config.titre_timer_active) {
+                checkbox.classList.add('checked');
+                timerGroup.style.display = 'flex';
+            } else {
+                checkbox.classList.remove('checked');
+                timerGroup.style.display = 'none';
+            }
+            sendConfigImmediate();
+        }
+        
+        function masquerTitreManuel() {
+            config.titre_active = false;
+            document.getElementById('checkboxTitre').classList.remove('checked');
+            sendConfigImmediate();
+            showStatus('✅ Titre masqué', 'success');
+        }
+        
+        function toggleHiddenImmediate() {
+            config.is_hidden = !config.is_hidden;
+            const checkbox = document.getElementById('checkboxHidden');
+            if (config.is_hidden) {
+                checkbox.classList.add('checked');
+            } else {
+                checkbox.classList.remove('checked');
+            }
+            sendConfigImmediate();
+        }
+        
+        function showStatus(message, type) {
+            const statusEl = document.getElementById('statusMessage');
+            statusEl.textContent = message;
+            statusEl.className = 'status-message ' + type;
+            statusEl.style.display = 'block';
+            
+            setTimeout(() => {
+                statusEl.style.display = 'none';
+            }, 3000);
+        }
+        
+        // ==================== DÉMARRAGE ====================
+        window.addEventListener('DOMContentLoaded', loadConfig);
+        
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                saveConfig();
+            }
+        });
+    </script>
+</body>
+</html>

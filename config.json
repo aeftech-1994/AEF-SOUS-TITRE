@@ -1,0 +1,12 @@
+{
+  "couleur": "#7A3F3A",
+  "position": "bas",
+  "taille": "35",
+  "titre_message": "Pleine victoire ou demi-victoire",
+  "titre_active": false,
+  "is_hidden": false,
+  "propresenter_api": "http://192.168.1.22:49196",
+  "police": "Montserrat",
+  "titre_timer": 5,
+  "titre_timer_active": true
+}
