@@ -18,13 +18,14 @@ const DEFAULT_CONFIG = {
     couleur: '#802B36',
     position: 'bas',
     taille: '35',
+    taille_verset: '55',
     police: 'Montserrat',
     titre_message: '',
     titre_active: false,
     titre_timer: 10,
     titre_timer_active: false,
     is_hidden: false,
-    propresenter_api: 'http://192.168.1.22:49196'
+    propresenter_api: 'http://127.0.0.1:49196'
 };
 
 // ==================== MIDDLEWARE ====================
@@ -74,22 +75,7 @@ async function pollProPresenter() {
             throw new Error(`HTTP ${response.status}`);
         }
         
-        // Vérifier si la réponse a du contenu
-        const text = await response.text();
-        if (!text || text.trim() === '') {
-            // Réponse vide, on ignore silencieusement
-            return;
-        }
-        
-        // Parser le JSON
-        let data;
-        try {
-            data = JSON.parse(text);
-        } catch (jsonErr) {
-            // JSON invalide, on ignore silencieusement
-            return;
-        }
-        
+        const data = await response.json();
         const currentText = data.current?.text || '';
         
         // Première connexion réussie

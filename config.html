@@ -439,13 +439,25 @@
         
         <!-- Taille avec bouton Modifier/Enregistrer -->
         <div class="section">
-            <label>📏 Taille du texte (en pixels)</label>
+            <label>📏 Taille du texte simple (en pixels)</label>
             <div class="input-with-button">
                 <div class="input-suffix">
                     <input type="number" id="taille_text" min="10" max="200" value="35" disabled>
                     <span>px</span>
                 </div>
                 <button class="edit-button" id="editButton" onclick="toggleEditMode()">✏️ Modifier</button>
+            </div>
+        </div>
+        
+        <!-- NOUVEAU : Taille police versets -->
+        <div class="section">
+            <label>📖 Taille des versets/titres (en pixels)</label>
+            <div class="input-with-button">
+                <div class="input-suffix">
+                    <input type="number" id="taille_verset" min="10" max="200" value="55" disabled>
+                    <span>px</span>
+                </div>
+                <button class="edit-button" id="editButtonVerset" onclick="toggleEditModeVerset()">✏️ Modifier</button>
             </div>
         </div>
         
@@ -456,6 +468,10 @@
                 <div class="checkbox-custom" id="checkboxHidden"></div>
                 <span>Masquer l'affichage (mode caché)</span>
             </div>
+            
+            <button class="save-button" onclick="clearProPresenter()" style="margin-top: 10px; background: #ff9800;">
+                🧹 Clear ProPresenter (masquer tout)
+            </button>
         </div>
         
         <!-- Bouton sauvegarder -->
@@ -482,6 +498,7 @@
             couleur: '#802B36',
             position: 'bas',
             taille: '35',
+            taille_verset: '55',
             police: 'Montserrat',
             titre_message: '',
             titre_active: false,
@@ -492,6 +509,7 @@
         };
         
         let isEditMode = false;
+        let isEditModeVerset = false;
         let isEditModeAPI = false;
         let qrcode = null;
         
@@ -522,6 +540,7 @@
             
             document.getElementById('titre_message').value = config.titre_message;
             document.getElementById('taille_text').value = config.taille;
+            document.getElementById('taille_verset').value = config.taille_verset || '55';
             document.getElementById('police_select').value = config.police || 'Montserrat';
             document.getElementById('titre_timer').value = config.titre_timer || 10;
             
@@ -635,7 +654,33 @@
                 // Sauvegarder automatiquement
                 config.taille = input.value;
                 sendConfigImmediate();
-                showStatus('✅ Taille enregistrée : ' + input.value + 'px', 'success');
+                showStatus('✅ Taille texte enregistrée : ' + input.value + 'px', 'success');
+            }
+        }
+        
+        function toggleEditModeVerset() {
+            const input = document.getElementById('taille_verset');
+            const button = document.getElementById('editButtonVerset');
+            
+            if (!isEditModeVerset) {
+                // Activer mode édition
+                input.disabled = false;
+                input.focus();
+                input.select();
+                button.textContent = '💾 Enregistrer';
+                button.classList.add('save-mode');
+                isEditModeVerset = true;
+            } else {
+                // Enregistrer et verrouiller
+                input.disabled = true;
+                button.textContent = '✏️ Modifier';
+                button.classList.remove('save-mode');
+                isEditModeVerset = false;
+                
+                // Sauvegarder automatiquement
+                config.taille_verset = input.value;
+                sendConfigImmediate();
+                showStatus('✅ Taille verset enregistrée : ' + input.value + 'px', 'success');
             }
         }
         
@@ -652,6 +697,7 @@
             config.propresenter_api = `http://${ip}:${port}`;
             config.titre_message = document.getElementById('titre_message').value.trim();
             config.taille = document.getElementById('taille_text').value;
+            config.taille_verset = document.getElementById('taille_verset').value;
             config.police = document.getElementById('police_select').value;
             config.titre_timer = parseInt(document.getElementById('titre_timer').value) || 10;
             
@@ -753,6 +799,25 @@
             sendConfigImmediate();
         }
         
+        async function clearProPresenter() {
+            const ip = document.getElementById('propresenter_ip').value.trim();
+            const port = document.getElementById('propresenter_port').value.trim();
+            const apiUrl = `http://${ip}:${port}/v1/clear/all`;
+            
+            try {
+                const response = await fetch(apiUrl, { method: 'GET' });
+                if (response.ok) {
+                    showStatus('✅ ProPresenter cleared (tout masqué)', 'success');
+                    console.log('[ProPresenter] Clear all executed');
+                } else {
+                    showStatus('❌ Erreur Clear ProPresenter', 'error');
+                }
+            } catch (err) {
+                console.error('[ProPresenter] Erreur Clear:', err);
+                showStatus('❌ Impossible de contacter ProPresenter', 'error');
+            }
+        }
+        
         function showStatus(message, type) {
             const statusEl = document.getElementById('statusMessage');
             statusEl.textContent = message;
@@ -766,6 +831,23 @@
         
         // ==================== DÉMARRAGE ====================
         window.addEventListener('DOMContentLoaded', loadConfig);
+        
+        // Auto-refresh de la config toutes les 2 secondes (synchronisation)
+        setInterval(async () => {
+            try {
+                const response = await fetch(API_URL);
+                const data = await response.json();
+                
+                // Mettre à jour seulement si changé
+                if (JSON.stringify(data) !== JSON.stringify(config)) {
+                    console.log('[AUTO-REFRESH] Config mise à jour');
+                    config = data;
+                    applyConfig();
+                }
+            } catch (err) {
+                // Ignorer les erreurs de refresh silencieusement
+            }
+        }, 2000);
         
         document.addEventListener('keydown', (e) => {
             if ((e.ctrlKey || e.metaKey) && e.key === 's') {

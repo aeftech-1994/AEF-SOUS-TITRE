@@ -11,7 +11,7 @@
             --couleur-principale: #802B36;
             --position-texte: flex-end;
             --taille-texte-normal: 35px;
-            --taille-verset: 1.35rem;
+            --taille-verset: 55px;
             --police-principale: 'Montserrat', sans-serif;
         }
 
@@ -71,6 +71,10 @@
             opacity: 1;
             display: block;
         }
+        
+        #simple-text.fade-out {
+            opacity: 0;
+        }
 
         body.hidden-display #simple-text.active {
             opacity: 0;
@@ -84,7 +88,7 @@
             position: relative;
             opacity: 0;
             transform: translateY(100px);
-            transition: all 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: all 1.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.8s ease;
             display: none;
         }
 
@@ -92,6 +96,11 @@
             opacity: 1;
             transform: translateY(0);
             display: block;
+        }
+        
+        .lt-wrapper.fade-out {
+            opacity: 0;
+            transition: opacity 0.8s ease;
         }
 
         body.hidden-display .lt-wrapper.visible {
@@ -346,7 +355,7 @@
         }
 
         // ==================== VARIABLES GLOBALES ====================
-        let API_BASE = "http://192.168.1.22:49196";
+        let API_BASE = "http://127.0.0.1:49196";
         const simpleTextEl = document.getElementById("simple-text");
         const ltContainer = document.getElementById("ltContainer");
         const refBadge = document.getElementById("refBadge");
@@ -363,8 +372,14 @@
         let titreTimeout = null; // Timer pour masquer le titre
         let statusHideTimeout = null;
         let isPresentationActive = true; // NOUVEAU : Indique si présentation active
+        let checkCount = 0; // Compteur de vérifications
         const INACTIVITY_THRESHOLD = 20000;
         let lastUpdateTime = Date.now();
+        
+        // Timeouts d'animation
+        let fadeOutTimeout = null;
+        let transitionTimeout = null;
+        let isAnimating = false;
 
         // ==================== CHARGEMENT CONFIG ====================
         async function loadConfig() {
@@ -383,11 +398,14 @@
             
             document.documentElement.style.setProperty('--couleur-principale', config.couleur);
             document.documentElement.style.setProperty('--taille-texte-normal', config.taille + 'px');
+            document.documentElement.style.setProperty('--taille-verset', (config.taille_verset || '55') + 'px');
             
             if (config.police) {
                 document.documentElement.style.setProperty('--police-principale', `'${config.police}', sans-serif`);
                 console.log('[CONFIG] Police:', config.police);
             }
+            
+            console.log('[CONFIG] Tailles - Texte:', config.taille + 'px', 'Verset:', (config.taille_verset || '55') + 'px');
             
             document.body.className = 'position-' + config.position;
             
@@ -446,10 +464,17 @@
             
             titreTimeout = setTimeout(async () => {
                 console.log('[TIMER] Masquage automatique du titre');
-                titreActive = false;
-                currentMode = null;
-                ltContainer.classList.remove('visible');
-                simpleTextEl.classList.remove('active');
+                
+                // Appliquer fondu de sortie
+                ltContainer.classList.add('fade-out');
+                simpleTextEl.classList.add('fade-out');
+                
+                setTimeout(async () => {
+                    titreActive = false;
+                    currentMode = null;
+                    ltContainer.classList.remove('visible', 'fade-out');
+                    simpleTextEl.classList.remove('active', 'fade-out');
+                }, 800);
                 
                 // IMPORTANT : Désactiver le titre dans la config serveur
                 try {
@@ -482,14 +507,26 @@
         function updateDisplay(text) {
             if (titreActive) return;
             
-            // NOUVEAU : Si aucune présentation active, masquer tout
+            // NOUVEAU : Si aucune présentation active, masquer avec FONDU
             if (!isPresentationActive) {
-                if (simpleTextEl.classList.contains('active') || ltContainer.classList.contains('visible')) {
-                    simpleTextEl.classList.remove("active");
-                    ltContainer.classList.remove("visible");
-                    currentMode = null;
-                    lastText = ""; // Réinitialiser lastText aussi
-                    console.log('[Display] Présentation inactive - Masquage forcé');
+                if ((simpleTextEl.classList.contains('active') || ltContainer.classList.contains('visible')) 
+                    && !isAnimating) {
+                    
+                    isAnimating = true;
+                    // Ajouter classe fade-out pour transition douce
+                    simpleTextEl.classList.add('fade-out');
+                    ltContainer.classList.add('fade-out');
+                    
+                    // Après le fondu, masquer complètement
+                    if (fadeOutTimeout) clearTimeout(fadeOutTimeout);
+                    fadeOutTimeout = setTimeout(() => {
+                        simpleTextEl.classList.remove("active", "fade-out");
+                        ltContainer.classList.remove("visible", "fade-out");
+                        currentMode = null;
+                        isAnimating = false;
+                    }, 800); // Durée du fondu
+                    
+                    console.log('[Display] Présentation inactive - Masquage avec fondu');
                 }
                 return;
             }
@@ -503,9 +540,21 @@
             // Si texte vide OU patterns de masquage spéciaux
             const textTrimmed = text.trim();
             if (textTrimmed === "" || textTrimmed === "---" || textTrimmed === "CLEAR" || textTrimmed === "MASQUER") {
-                simpleTextEl.classList.remove("active");
-                ltContainer.classList.remove("visible");
-                currentMode = null;
+                if ((simpleTextEl.classList.contains('active') || ltContainer.classList.contains('visible')) 
+                    && !isAnimating) {
+                    
+                    isAnimating = true;
+                    simpleTextEl.classList.add('fade-out');
+                    ltContainer.classList.add('fade-out');
+                    
+                    if (fadeOutTimeout) clearTimeout(fadeOutTimeout);
+                    fadeOutTimeout = setTimeout(() => {
+                        simpleTextEl.classList.remove("active", "fade-out");
+                        ltContainer.classList.remove("visible", "fade-out");
+                        currentMode = null;
+                        isAnimating = false;
+                    }, 800);
+                }
                 console.log('[Display] Masquage détecté:', textTrimmed || '(vide)');
                 return;
             }
@@ -516,34 +565,88 @@
                 const wasVersetMode = (currentMode === 'verset');
                 const isInactive = timeSinceLastUpdate > INACTIVITY_THRESHOLD;
                 
-                if (wasVersetMode && !isInactive) {
+                if (wasVersetMode && !isInactive && !isAnimating) {
                     console.log('[Animation] FADE');
+                    isAnimating = true;
                     textContent.classList.add('fade-out');
                     refBadge.style.opacity = "0";
                     
-                    setTimeout(() => {
+                    if (transitionTimeout) clearTimeout(transitionTimeout);
+                    transitionTimeout = setTimeout(() => {
                         refBadge.innerText = verset.reference;
                         verseBody.innerHTML = verset.texte;
                         textContent.classList.remove('fade-out');
                         refBadge.style.opacity = "1";
+                        isAnimating = false;
                     }, 600);
-                } else {
+                } else if (!isAnimating) {
                     console.log('[Animation] SLIDE-UP');
-                    simpleTextEl.classList.remove("active");
-                    ltContainer.classList.remove("visible");
+                    isAnimating = true;
                     
-                    refBadge.innerText = verset.reference;
-                    verseBody.innerHTML = verset.texte;
-                    
-                    void ltContainer.offsetWidth;
-                    ltContainer.classList.add("visible");
-                    currentMode = 'verset';
+                    // Fondu si on vient du texte simple
+                    if (simpleTextEl.classList.contains('active')) {
+                        simpleTextEl.classList.add('fade-out');
+                        if (transitionTimeout) clearTimeout(transitionTimeout);
+                        transitionTimeout = setTimeout(() => {
+                            simpleTextEl.classList.remove("active", "fade-out");
+                            
+                            ltContainer.classList.remove("visible");
+                            refBadge.innerText = verset.reference;
+                            verseBody.innerHTML = verset.texte;
+                            
+                            void ltContainer.offsetWidth;
+                            ltContainer.classList.add("visible");
+                            ltContainer.classList.remove('fade-out');
+                            currentMode = 'verset';
+                            isAnimating = false;
+                        }, 400);
+                    } else {
+                        ltContainer.classList.remove("visible");
+                        refBadge.innerText = verset.reference;
+                        verseBody.innerHTML = verset.texte;
+                        
+                        void ltContainer.offsetWidth;
+                        ltContainer.classList.add("visible");
+                        ltContainer.classList.remove('fade-out');
+                        currentMode = 'verset';
+                        isAnimating = false;
+                    }
                 }
             } else {
-                ltContainer.classList.remove("visible");
-                simpleTextEl.innerHTML = text.replace(/\n/g, "<br>");
-                simpleTextEl.classList.add("active");
-                currentMode = 'simple';
+                if (currentMode === 'simple' && !isAnimating) {
+                    // Fondu pour changement de texte simple
+                    isAnimating = true;
+                    simpleTextEl.classList.add('fade-out');
+                    
+                    if (transitionTimeout) clearTimeout(transitionTimeout);
+                    transitionTimeout = setTimeout(() => {
+                        simpleTextEl.innerHTML = text.replace(/\n/g, "<br>");
+                        simpleTextEl.classList.remove('fade-out');
+                        isAnimating = false;
+                    }, 400);
+                } else if (!isAnimating) {
+                    // Transition depuis verset vers simple
+                    isAnimating = true;
+                    
+                    if (ltContainer.classList.contains('visible')) {
+                        ltContainer.classList.add('fade-out');
+                        if (transitionTimeout) clearTimeout(transitionTimeout);
+                        transitionTimeout = setTimeout(() => {
+                            ltContainer.classList.remove("visible", "fade-out");
+                            simpleTextEl.innerHTML = text.replace(/\n/g, "<br>");
+                            simpleTextEl.classList.add("active");
+                            simpleTextEl.classList.remove('fade-out');
+                            currentMode = 'simple';
+                            isAnimating = false;
+                        }, 400);
+                    } else {
+                        simpleTextEl.innerHTML = text.replace(/\n/g, "<br>");
+                        simpleTextEl.classList.add("active");
+                        simpleTextEl.classList.remove('fade-out');
+                        currentMode = 'simple';
+                        isAnimating = false;
+                    }
+                }
             }
             
             lastUpdateTime = now;
@@ -562,7 +665,6 @@
         }
 
         // ==================== POLLING PROPRESENTER ====================
-        let checkCount = 0;  // Compteur de vérifications
         
         async function checkPresentationActive() {
             try {
@@ -609,7 +711,7 @@
                     console.warn(`═══════════════════════════════════════════`);
                 }
             } catch (err) {
-                console.error(`[Presentation #${checkCount}] ❌ Erreur:`, err.message);
+                console.error(`[Presentation #${checkCount}] ❌ Erreur:`, err);
                 // En cas d'erreur, considérer comme active
                 isPresentationActive = true;
             }
@@ -617,15 +719,8 @@
         
         async function pollUpdate() {
             try {
-                // TOUJOURS vérifier si une présentation est active (toutes les 500ms)
+                // Vérifier si une présentation est active
                 await checkPresentationActive();
-                
-                // Si aucune présentation active, masquer tout et arrêter
-                if (!isPresentationActive) {
-                    updateDisplay(''); // Force le masquage
-                    setStatus('connected');
-                    return;
-                }
                 
                 // Récupérer le slide actuel
                 const response = await fetch(`${API_BASE}/v1/status/slide`);
@@ -636,7 +731,7 @@
                 // Vérifier si la réponse a du contenu
                 const text = await response.text();
                 if (!text || text.trim() === '') {
-                    // Réponse vide, ignorer silencieusement
+                    console.warn('[ProPresenter] Réponse vide - Ignorer');
                     return;
                 }
                 
@@ -645,7 +740,7 @@
                 try {
                     data = JSON.parse(text);
                 } catch (parseErr) {
-                    // JSON invalide, ignorer silencieusement
+                    console.error('[ProPresenter] JSON invalide:', text.substring(0, 100));
                     return;
                 }
                 
